@@ -35,8 +35,8 @@ export function generateDocuments(projectId: string) {
   })
 }
 
-export function confirmProjectReview(projectId: string) {
-  return apiRequest<Project>(`/projects/${projectId}/confirm-review`, {
+export function confirmDocumentReview(projectId: string, kind: DocumentKind) {
+  return apiRequest<Project>(`/projects/${projectId}/documents/${kind}/confirm-review`, {
     method: 'POST',
   })
 }

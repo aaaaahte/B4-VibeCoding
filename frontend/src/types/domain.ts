@@ -58,11 +58,11 @@ export interface Project {
 export interface ProjectCreatePayload {
   name: string
   idea: string
-  target_users: string
-  scenario: string
-  references: string
-  constraints: string
-  tech_preferences: string
+  target_users?: string
+  scenario?: string
+  references?: string
+  constraints?: string
+  tech_preferences?: string
 }
 
 export interface GenerateDocumentsResponse {

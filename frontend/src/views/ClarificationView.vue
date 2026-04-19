@@ -38,7 +38,7 @@ async function generateProjectDocuments() {
     正在加载需求澄清...
   </section>
 
-  <template v-else-if="project && clarification">
+  <div v-else-if="project && clarification" class="stack">
     <section class="page-header">
       <div>
         <p class="eyebrow">需求澄清</p>
@@ -135,7 +135,7 @@ async function generateProjectDocuments() {
         </section>
       </article>
     </section>
-  </template>
+  </div>
 
   <section v-else class="surface empty-state">
     <h2>未找到项目</h2>

@@ -42,9 +42,9 @@ def build_router(project_service: ProjectService) -> APIRouter:
     def generate_documents(project_id: str) -> DocumentGenerationResponse:
         return project_service.generate_documents(project_id)
 
-    @router.post("/projects/{project_id}/confirm-review", response_model=Project)
-    def confirm_project_review(project_id: str) -> Project:
-        return project_service.confirm_project_review(project_id)
+    @router.post("/projects/{project_id}/documents/{kind}/confirm-review", response_model=Project)
+    def confirm_document_review(project_id: str, kind: DocumentKind) -> Project:
+        return project_service.confirm_document_review(project_id, kind)
 
     @router.get("/projects/{project_id}/documents")
     def list_documents(project_id: str):

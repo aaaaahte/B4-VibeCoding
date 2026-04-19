@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 
 import {
   answerClarification,
-  confirmProjectReview,
+  confirmDocumentReview,
   createProject,
   fetchProject,
   fetchProjectDocument,
@@ -82,10 +82,14 @@ export const useProjectStore = defineStore('projects', {
       return response.project
     },
 
-    async confirmReview(projectId: string) {
-      const project = await this.runAction(() => confirmProjectReview(projectId))
+    async confirmReview(projectId: string, kind: DocumentKind) {
+      const project = await this.runAction(() => confirmDocumentReview(projectId, kind))
       this.currentProject = project
       this.projects = this.projects.map((item) => (item.id === project.id ? project : item))
+      if (this.currentDocument && this.currentDocument.kind === kind) {
+        const updatedDocument = project.documents.find((item) => item.kind === kind) ?? null
+        this.currentDocument = updatedDocument
+      }
       return project
     },
 

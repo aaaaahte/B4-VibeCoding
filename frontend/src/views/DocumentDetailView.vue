@@ -13,6 +13,11 @@ const projectStore = useProjectStore()
 const projectId = computed(() => String(route.params.projectId))
 const kind = computed(() => String(route.params.kind) as DocumentKind)
 const project = computed(() => projectStore.currentProject)
+const canExportCurrentDocument = computed(
+  () =>
+    projectStore.currentDocument?.status === 'completed' &&
+    Boolean(projectStore.currentDocument?.content),
+)
 
 onMounted(async () => {
   await projectStore.loadProject(projectId.value)
@@ -20,11 +25,11 @@ onMounted(async () => {
 })
 
 async function confirmReview() {
-  await projectStore.confirmReview(projectId.value)
+  await projectStore.confirmReview(projectId.value, kind.value)
 }
 
 function exportCurrentDocument() {
-  if (!project.value || !projectStore.currentDocument) {
+  if (!project.value || !projectStore.currentDocument || !canExportCurrentDocument.value) {
     return
   }
 
@@ -51,15 +56,15 @@ function exportCurrentDocument() {
       <section class="surface card">
         <div class="button-row">
           <button
+            v-if="canExportCurrentDocument"
             class="button"
             type="button"
-            :disabled="!projectStore.currentDocument.content"
             @click="exportCurrentDocument"
           >
             导出 MD
           </button>
           <button
-            v-if="project?.stage === 'documents' && project?.status === 'pending_review'"
+            v-if="projectStore.currentDocument.status === 'pending_review'"
             class="button"
             type="button"
             :disabled="projectStore.loading"

@@ -83,12 +83,12 @@ class ProjectService:
 
         project.documents = self.ai_provider.generate_documents(project)
         project.stage = ProjectStage.DOCUMENTS
-        project.status = WorkflowStatus.PENDING_REVIEW
+        self._sync_project_review_status(project)
         project.updated_at = datetime.now(UTC)
         saved_project = self.repository.save_project(project)
         return DocumentGenerationResponse(message="文档生成完成", project=saved_project)
 
-    def confirm_project_review(self, project_id: str) -> Project:
+    def confirm_document_review(self, project_id: str, kind: DocumentKind) -> Project:
         project = self.get_project(project_id)
         if project.stage != ProjectStage.DOCUMENTS:
             raise HTTPException(
@@ -96,7 +96,19 @@ class ProjectService:
                 detail="当前项目还未进入文档确认阶段",
             )
 
-        project.status = WorkflowStatus.COMPLETED
+        document = next((item for item in project.documents if item.kind == kind), None)
+        if not document:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="文档不存在")
+
+        if not document.content:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="当前文档尚未生成内容，无法确认",
+            )
+
+        document.status = WorkflowStatus.COMPLETED
+        document.updated_at = datetime.now(UTC)
+        self._sync_project_review_status(project)
         project.updated_at = datetime.now(UTC)
         return self.repository.save_project(project)
 
@@ -137,3 +149,21 @@ class ProjectService:
             )
             for kind, title in DOCUMENT_TITLES.items()
         ]
+
+    def _sync_project_review_status(self, project: Project) -> None:
+        if not project.documents:
+            project.status = WorkflowStatus.NOT_STARTED
+            return
+
+        if all(document.status == WorkflowStatus.COMPLETED for document in project.documents):
+            project.status = WorkflowStatus.COMPLETED
+            return
+
+        if any(
+            document.status in {WorkflowStatus.PENDING_REVIEW, WorkflowStatus.COMPLETED}
+            for document in project.documents
+        ):
+            project.status = WorkflowStatus.PENDING_REVIEW
+            return
+
+        project.status = WorkflowStatus.IN_PROGRESS

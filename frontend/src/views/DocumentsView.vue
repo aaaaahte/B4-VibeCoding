@@ -11,17 +11,22 @@ const projectStore = useProjectStore()
 
 const projectId = computed(() => String(route.params.projectId))
 const project = computed(() => projectStore.currentProject)
+const canExportAll = computed(() => {
+  if (!project.value || project.value.documents.length === 0) {
+    return false
+  }
+
+  return project.value.documents.every(
+    (document) => document.status === 'completed' && Boolean(document.content),
+  )
+})
 
 onMounted(() => {
   void projectStore.loadProject(projectId.value)
 })
 
-async function confirmReview() {
-  await projectStore.confirmReview(projectId.value)
-}
-
 function exportAllDocuments() {
-  if (!project.value) {
+  if (!project.value || !canExportAll.value) {
     return
   }
 
@@ -44,21 +49,12 @@ function exportAllDocuments() {
         </div>
         <div class="button-row">
           <button
+            v-if="canExportAll"
             class="button"
             type="button"
-            :disabled="!project.documents.some((document) => document.content)"
             @click="exportAllDocuments"
           >
             导出全部 MD
-          </button>
-          <button
-            v-if="project.stage === 'documents' && project.status === 'pending_review'"
-            class="button"
-            type="button"
-            :disabled="projectStore.loading"
-            @click="confirmReview"
-          >
-            {{ projectStore.loading ? '确认中...' : '确认文档评审完成' }}
           </button>
           <RouterLink class="button button-secondary" :to="`/projects/${project.id}`">
             返回工作台

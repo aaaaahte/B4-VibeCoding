@@ -25,7 +25,13 @@ export default defineComponent({
     },
   },
   methods: {
+    canExport() {
+      return this.document.status === 'completed' && Boolean(this.document.content)
+    },
     exportMarkdown() {
+      if (!this.canExport()) {
+        return
+      }
       exportDocumentAsMarkdown(this.projectName, this.document)
     },
   },
@@ -50,9 +56,9 @@ export default defineComponent({
     </p>
     <div class="button-row">
       <button
+        v-if="canExport()"
         class="button"
         type="button"
-        :disabled="!document.content"
         @click="exportMarkdown"
       >
         导出 MD
